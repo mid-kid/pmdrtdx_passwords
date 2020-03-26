@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+    <head>
+    </head>
+    <body>
+        <h1>Pokémon Mystery Dungeon: Rescue Team DX password tool</h1>
+        <form action="decode">
+            <label for="c">Password:</label>
+            <br>
+            <textarea type="text" name="c" rows="3" cols="70">{{ password }}</textarea>
+            <br>
+            <input type="submit" value="Decode">
+        </form>
+
+        {% if warnings %}
+        <div>
+            WARNING! This password will not work in-game, because:<br>
+            <ul>
+            {% for warning in warnings %}
+                {% if warning == "checksum" %}
+                <li>The checksum doesn't match</li>
+                {% elif warning == "dungeon" %}
+                <li>The dungeon is invalid or doesn't allow rescues</li>
+                {% elif warning == "gender" %}
+                <li>The gender value is invalid</li>
+                {% elif warning == "reward" %}
+                <li>The reward value is invalid</li>
+                {% elif warning == "floor" %}
+                <li>The floor isn't accessible in this dungeon</li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if info_text %}
+        <textarea readonly rows="{{ info_text.count("\n") + 1 }}" cols="40">{{ info_text }}</textarea>
+        {% endif %}
+
+        <form action="encode">
+        </form>
+    </body>
+</html>
