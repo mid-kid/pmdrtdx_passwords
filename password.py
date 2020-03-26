@@ -179,7 +179,6 @@ def decode(code):
         charcode = ""
         for x in origcode:
             charcode += romdata.charmap[x]
-        print(charcode)
         info["revive"] = crc32(charcode.encode("utf8")) & 0x3FFFFFFF
     else:
         info["revive"] = reader.read(30)

@@ -31,12 +31,6 @@ def password_translate(password):
 
 @app.route("/")
 def index():
-    if False:
-        code = password_translate(d)
-        print(code)
-        if code:
-            info = password.decode(code)
-
     return render_template("index.html")
 
 def get_info_text(info):
