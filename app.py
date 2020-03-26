@@ -75,19 +75,20 @@ def get_warnings(info):
     if info["calc_checksum"] != info["incl_checksum"]:
         warnings.append("checksum")
 
-    items = {
-        "dungeons": "dungeon",
-        "pokemon": "pokemon",
-        "genders": "gender",
-        "rewards": "reward"
-    }
-    for item, index in items.items():
-        if not romdata.get_index(item, info[index])["valid"]:
-            warnings.append(index)
-    
-    dungeon = romdata.get_index("dungeons", info["dungeon"])
-    if info["floor"] == 0 or info["floor"] > dungeon["floors"]:
-        warnings.append("floor")
+    if info["type"] == 0:
+        items = {
+            "dungeons": "dungeon",
+            "pokemon": "pokemon",
+            "genders": "gender",
+            "rewards": "reward"
+        }
+        for item, index in items.items():
+            if not romdata.get_index(item, info[index])["valid"]:
+                warnings.append(index)
+        
+        dungeon = romdata.get_index("dungeons", info["dungeon"])
+        if info["floor"] == 0 or info["floor"] > dungeon["floors"]:
+            warnings.append("floor")
 
     return warnings
 
