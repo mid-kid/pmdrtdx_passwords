@@ -96,15 +96,21 @@ def decode():
     info = None
     info_text = None
     password_input = None
+    warnings = None
+    decode_failed = False
     if "c" in request.args:
         password_input = request.args.get("c")
         code = password_translate(password_input)
-        if password:
+        if code:
             info = password.decode(code)
             info_text = get_info_text(info)
+            warnings = get_warnings(info)
+        else:
+            decode_failed = True
 
     return render_template("index.html",
             password=password_input,
             info=info,
             info_text=info_text,
-            warnings=get_warnings(info))
+            warnings=warnings,
+            decode_failed=decode_failed)

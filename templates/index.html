@@ -15,6 +15,12 @@
             <input type="submit" value="Decode">
         </form>
 
+        {% if decode_failed %}
+        <div>
+            ERROR! Couldn't decode the password. Make sure it contains exactly 30 character pairs, and doesn't include "XS".
+        </div>
+        {% endif %}
+
         {% if warnings %}
         <div>
             WARNING! This password will not work in-game, because:<br>
