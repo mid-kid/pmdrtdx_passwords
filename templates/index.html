@@ -30,6 +30,8 @@
                 <li>The checksum doesn't match</li>
                 {% elif warning == "dungeon" %}
                 <li>The dungeon is invalid or doesn't allow rescues</li>
+                {% elif warning == "pokemon" %}
+                <li>The pokemon either doesn't exist in this game or is an alternate form (like a mega)</li>
                 {% elif warning == "gender" %}
                 <li>The gender value is invalid</li>
                 {% elif warning == "reward" %}
