@@ -1,0 +1,23 @@
+.pwdchar {
+    display: inline-block;
+    background-size: cover;
+    height: 40px;
+    line-height: 40px;
+    width: 40px;
+    text-align: center;
+    font-weight: bold;
+    color: white;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+    font-size: 20px;
+}
+.pwdchar_F { background-image: url("Password_Mark01.png"); }
+.pwdchar_H { background-image: url("Password_Mark02.png"); }
+.pwdchar_W { background-image: url("Password_Mark03.png"); }
+.pwdchar_E { background-image: url("Password_Mark04.png"); }
+.pwdchar_S { background-image: url("Password_Mark05.png"); }
+
+.pwdbox {
+    display: grid;
+    grid-template-columns: min-content min-content min-content min-content max-content min-content min-content min-content min-content min-content min-content min-content min-content min-content min-content;
+}
+.pwdbox > .pwdchar:nth-child(5n) { margin-right: 15px; }
