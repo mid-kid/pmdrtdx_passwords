@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
     <head>
+        <link rel="stylesheet" type="text/css" href="static/style.css">
     </head>
     <body>
         <h1>Pokémon Mystery Dungeon: Rescue Team DX password tool</h1>
@@ -50,5 +51,12 @@
 
         <form action="encode">
         </form>
+
+        {% if output_password %}
+        Revival password:
+        <div class="pwdbox">
+            {{ output_password }}
+        </div>
+        {% endif %}
     </body>
 </html>

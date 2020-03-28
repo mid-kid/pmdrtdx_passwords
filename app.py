@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, escape
+from flask import Flask, Markup, render_template, request
 app = Flask(__name__)
 
 from datetime import datetime
@@ -11,6 +11,12 @@ charmap_symbols = [
     "1W", "2W", "3W", "4W", "5W", "6W", "7W", "8W", "9W", "PW", "MW", "DW", "XW",
     "1E", "2E", "3E", "4E", "5E", "6E", "7E", "8E", "9E", "PE", "ME", "DE", "XE",
     "1S", "2S", "3S", "4S", "5S", "6S", "7S", "8S", "9S", "PS", "MS", "DS", #"XS",
+]
+
+charmap_html = [
+    "<div class=\"pwdchar pwdchar_%s\">%s</div>" % (y, x)
+    for y in ["F", "H", "W", "E", "S"]
+    for x in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "P", "M", "D", "X"]
 ]
 
 def password_translate(password):
@@ -28,6 +34,12 @@ def password_translate(password):
             return None
         newcode.append(index)
     return newcode
+
+def password_html(code):
+    html = ""
+    for char in range(len(code)):
+        html += Markup(charmap_html[code[char]])
+    return html
 
 @app.route("/")
 def index():
@@ -99,6 +111,7 @@ def decode():
     password_input = None
     warnings = None
     decode_failed = False
+
     if "c" in request.args:
         password_input = request.args.get("c")
         code = password_translate(password_input)
@@ -109,9 +122,20 @@ def decode():
         else:
             decode_failed = True
 
+    output_password = None
+    if info:
+        output_password = password_html(password.encode({
+            "timestamp": info["timestamp"],
+            "type": 1,
+            "unk1": 0,
+            "team": [romdata.charmap_text.index(x) for x in "Passwd tool"],
+            "revive": info["revive"]
+        }))
+
     return render_template("index.html",
             password=password_input,
             info=info,
             info_text=info_text,
             warnings=warnings,
-            decode_failed=decode_failed)
+            decode_failed=decode_failed,
+            output_password=output_password)
