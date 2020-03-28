@@ -124,7 +124,7 @@ def decode():
             decode_failed = True
 
     output_password = None
-    if info:
+    if info and not warnings:
         output_password = password_html(password.encode({
             "timestamp": info["timestamp"],
             "type": 1,
