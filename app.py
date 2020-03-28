@@ -47,6 +47,7 @@ def index():
 
 def get_info_text(info):
     info_text = ""
+    info_text += "Checksum: 0x%02X (calculated: 0x%02X)\n" % (info["incl_checksum"], info["calc_checksum"])
     info_text += "Timestamp: %s\n" % datetime.fromtimestamp(info["timestamp"])
     info_text += "Revive: %s\n" % (info["type"] == 1)
     info_text += "Unk1: 0x%X\n" % info["unk1"]
