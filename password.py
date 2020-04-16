@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from sys import stderr, exit
+from datetime import datetime
 import romdata
 
 class NumberGenerator():
@@ -213,6 +214,62 @@ def encode(info):
 
     return code
 
+def print_info(info):
+    info_text = ""
+
+    info_text += "Checksum: 0x%02X (calculated: 0x%02X)\n" % (info["incl_checksum"], info["calc_checksum"])
+    info_text += "Timestamp: %s\n" % datetime.fromtimestamp(info["timestamp"])
+    info_text += "Revive: %s\n" % (info["type"] == 1)
+    info_text += "Unk1: 0x%X\n" % info["unk1"]
+
+    info_text += "Team Name: "
+    for char in info["team"]:
+        if char == 0:
+            break
+        if char < 402:
+            info_text += romdata.charmap_text[char]
+        else:
+            info_text += "★"
+    info_text += "\n"
+
+    if info["type"] == 0:
+        dungeon = romdata.get_index("dungeons", info["dungeon"])
+        info_text += "Dungeon (%d): %s" % (info["dungeon"], dungeon["name"])
+        if not dungeon["valid"]:
+            info_text += " (!)"
+        info_text += "\n"
+
+        floor = "%dF" % info["floor"]
+        if not dungeon["ascending"]:
+            floor = "B" + floor
+        info_text += "Floor: %s" % floor
+        if info["floor"] == 0 or info["floor"] > dungeon["floors"]:
+            info_text += " (!)"
+        info_text += "\n"
+
+        pokemon = romdata.get_index("pokemon", info["pokemon"])
+        info_text += "Pokemon (%d): %s" % (info["pokemon"], pokemon["name"])
+        if not pokemon["valid"]:
+            info_text += " (!)"
+        info_text += "\n"
+
+        gender = romdata.get_index("genders", info["gender"])
+        info_text += "Gender: %s" % gender["name"]
+        if not gender["valid"]:
+            info_text += " (!)"
+        info_text += "\n"
+
+        reward = romdata.get_index("rewards", info["reward"])
+        info_text += "Reward: %s" % reward["name"]
+        if not reward["valid"]:
+            info_text += " (!)"
+        info_text += "\n"
+
+        info_text += "Unk2: 0x%X\n" % info["unk2"]
+
+    info_text += "Revive value: 0x%08X\n" % info["revive"]
+    return info_text
+
 if __name__ == "__main__":
     charmap_symbols = [
         "1F", "2F", "3F", "4F", "5F", "6F", "7F", "8F", "9F", "PF", "MF", "DF", "XF",
@@ -223,7 +280,6 @@ if __name__ == "__main__":
     ]
 
     import json
-    from datetime import datetime
 
     import argparse
     parser = argparse.ArgumentParser()
@@ -281,34 +337,4 @@ if __name__ == "__main__":
                 print(" ", end="")
 
     if args.info and info:
-        print("Date:", datetime.fromtimestamp(info["timestamp"]))
-        print("Revive:", info["type"] == 1)
-        print("Unk1: 0x%X" % info["unk1"])
-
-        print("Team Name: ", end="")
-        for char in info["team"]:
-            if char < 402:
-                print(romdata.charmap_text[char], end="")
-            else:
-                print("★", end="")
-        print()
-
-        if info["type"] == 0:
-            dungeon = romdata.get_index("dungeons", info["dungeon"])
-            print("Dungeon (%d):" % info["dungeon"], dungeon["name"], "" if dungeon["valid"] else "(!)")
-
-            floor = "%dF" % info["floor"]
-            if not dungeon["ascending"]:
-                floor = "B" + floor
-            print("Floor:", floor, "" if info["floor"] != 0 and info["floor"] <= dungeon["floors"] else "(!)")
-
-            pokemon = romdata.get_index("pokemon", info["pokemon"])
-            print("Pokemon (%d):" % info["pokemon"], pokemon["name"], "" if pokemon["valid"] else "(!)")
-
-            gender = romdata.get_index("genders", info["gender"])
-            print("Gender:", gender["name"], "" if gender["valid"] else "(!)")
-            reward = romdata.get_index("rewards", info["reward"])
-            print("Reward:", reward["name"], "" if reward["valid"] else "(!)")
-            print("Unk2: 0x%X" % info["unk2"])
-
-        print("Revive value: 0x%08X" % info["revive"])
+        print(print_info(info))

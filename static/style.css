@@ -21,3 +21,10 @@
     grid-template-columns: min-content min-content min-content min-content max-content min-content min-content min-content min-content min-content min-content min-content min-content min-content min-content;
 }
 .pwdbox > .pwdchar:nth-child(5n) { margin-right: 15px; }
+
+.formgrid {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    grid-column-gap: 10px;
+    text-align: right;
+}

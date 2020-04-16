@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
     <head>
+        <title>Pokémon Mystery Dungeon: Rescue Team DX password tool</title>
         <link rel="stylesheet" type="text/css" href="static/style.css">
     </head>
     <body>
@@ -11,52 +12,138 @@
         <form action="decode">
             <label for="c">Password:</label>
             <br>
-            <textarea type="text" name="c" rows="3" cols="70">{{ password }}</textarea>
+            <textarea type="text" id="c" name="c" rows="3" cols="70">{% if password %}{{ password }}{% endif %}</textarea>
             <br>
             <input type="submit" value="Decode">
         </form>
 
-        {% if decode_failed %}
+        {% if decode_failed -%}
         <div>
             ERROR! Couldn't decode the password. Make sure it contains exactly 30 character pairs, and doesn't include "XS".
         </div>
-        {% endif %}
 
-        {% if warnings %}
+        {% endif -%}
+        {% if encode_failed -%}
+        <div>
+            ERROR! Couldn't encode the password. Maybe some fields are missing, or you entered an invalid value for one of them?
+        </div>
+
+        {% endif -%}
+        {% if warnings -%}
         <div>
             WARNING! This password will not work in-game, because:<br>
             <ul>
-            {% for warning in warnings %}
-                {% if warning == "checksum" %}
+            {%- for warning in warnings %}
+                {%- if warning == "checksum" %}
                 <li>The checksum doesn't match</li>
-                {% elif warning == "dungeon" %}
+                {%- elif warning == "dungeon" %}
                 <li>The dungeon is invalid or doesn't allow rescues</li>
-                {% elif warning == "pokemon" %}
+                {%- elif warning == "pokemon" %}
                 <li>The pokemon either doesn't exist in this game or is an alternate form (like a mega)</li>
-                {% elif warning == "gender" %}
+                {%- elif warning == "gender" %}
                 <li>The gender value is invalid</li>
-                {% elif warning == "reward" %}
+                {%- elif warning == "reward" %}
                 <li>The reward value is invalid</li>
-                {% elif warning == "floor" %}
+                {%- elif warning == "floor" %}
                 <li>The floor isn't accessible in this dungeon</li>
-                {% endif %}
-            {% endfor %}
+                {%- endif %}
+            {%- endfor %}
             </ul>
         </div>
-        {% endif %}
 
-        {% if info_text %}
+        {% endif -%}
+        {% if info_text -%}
         <textarea readonly rows="{{ info_text.count("\n") + 1 }}" cols="40">{{ info_text }}</textarea>
-        {% endif %}
+
+        {% endif -%}
 
         <form action="encode">
+            <div class="formgrid">
+                {% macro options(name, array, maxval) %}
+                {%- for entry in array %}
+                    {%- if info and name in info and info[name] == loop.index0 %}
+                    <option value="{{ loop.index0 }}" selected>
+                    {%- else %}
+                    <option value="{{ loop.index0 }}">
+                    {%- endif %}
+                        {%- if entry is mapping -%}
+                        {{ loop.index0 }} - {{ entry.name }} - {{ entry.const }}
+                        {%- else -%}
+                        {{ loop.index0 }} - {{ entry }}
+                        {%- endif -%}
+                    </option>
+                {%- endfor %}
+                {%- for entry in range(array|length, maxval + 1) %}
+                    {%- if info and name in info and info[name] == entry %}
+                    <option value="{{ entry }}" selected>
+                    {%- else %}
+                    <option value="{{ entry }}">
+                    {%- endif %}
+                        {{- entry -}}
+                    </option>
+                {%- endfor %}
+                {% endmacro -%}
+
+                <label for="timestamp">Timestamp:</label>
+                <input type="text" id="timestamp" name="timestamp" value="
+                    {%- if info and "timestamp" in info %}{{ info.timestamp }}{% else %}0{% endif %}">
+
+                <label for="type">Mail type:</label>
+                <select id="type" name="type">
+                    {{- options("type", ("Rescue mail", "Revival mail"), value.type) -}}
+                </select>
+
+                <label for="unk1">Unknown 1:</label>
+                <select id="unk1" name="unk1">
+                    {{- options("unk1", (), value.unk1) -}}
+                </select>
+
+                <label for="team">Team Name:</label>
+                <input type="text" id="team" name="team" maxlength="12">
+
+                <label for="dungeon">Dungeon:</label>
+                <select id="dungeon" name="dungeon">
+                    {{- options("dungeon", romdata[named.dungeon], value.dungeon) -}}
+                </select>
+
+                <label for="floor">Floor:</label>
+                <input type="number" id="floor" name="floor" value="
+                    {%- if info and "floor" in info %}{{ info.floor }}{% else %}0{% endif %}">
+
+                <label for="pokemon">Pokémon:</label>
+                <select id="pokemon" name="pokemon">
+                    {{- options("pokemon", romdata[named.pokemon], value.pokemon) -}}
+                </select>
+
+                <label for="gender">Gender:</label>
+                <select id="gender" name="gender">
+                    {{- options("gender", romdata[named.gender], value.gender) -}}
+                </select>
+
+                <label for="reward">Reward:</label>
+                <select id="reward" name="reward">
+                    {{- options("reward", romdata[named.reward], value.reward) -}}
+                </select>
+
+                <label for="unk2">Unknown 2:</label>
+                <select id="unk2" name="unk2">
+                    {{- options("unk2", (), value.unk2) -}}
+                </select>
+
+                <label for="revive">Revive value:</label>
+                <input type="text" id="revive" name="revive" value="
+                    {%- if info and "revive" in info %}{{ info.revive }}{% else %}0{% endif %}">
+            </div>
+
+            <input type="submit" value="Encode">
         </form>
 
-        {% if output_password %}
-        Revival password:
+        {%- if password_output %}
+
+        Output password:
         <div class="pwdbox">
-            {{ output_password }}
+            {{ password_output }}
         </div>
-        {% endif %}
+        {%- endif %}
     </body>
 </html>

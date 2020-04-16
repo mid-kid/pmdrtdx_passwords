@@ -1,7 +1,6 @@
-from flask import Flask, Markup, render_template, request
+from flask import Flask, Markup, render_template, request, escape
 app = Flask(__name__)
 
-from datetime import datetime
 import password
 import romdata
 
@@ -19,7 +18,27 @@ charmap_html = [
     for x in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "P", "M", "D", "X"]
 ]
 
-def password_translate(password):
+value_fields = {
+    "timestamp": 0xFFFFFFFF,
+    "type": 1,
+    "unk1": 1,
+    "dungeon": 0x7F,
+    "floor": 0x7F,
+    "pokemon": 0x7FF,
+    "gender": 3,
+    "reward": 3,
+    "unk2": 1,
+    "revive": 0x3FFFFFFF
+}
+
+named_fields = {
+    "dungeon": "dungeons",
+    "pokemon": "pokemon",
+    "gender": "genders",
+    "reward": "rewards"
+}
+
+def password_char2val(password):
     code = "".join(password.split()).upper()
     if len(code) != 30 * 2:
         return None
@@ -35,69 +54,35 @@ def password_translate(password):
         newcode.append(index)
     return newcode
 
+def password_val2char(code):
+    password = ""
+    for index, val in enumerate(code):
+        symbol = charmap_symbols[val]
+        password += symbol[0].upper()
+        password += symbol[1].lower()
+        if index % 15 == 14:
+            password += "\n"
+        elif index % 5 == 4:
+            password += " "
+    return password
+
 def password_html(code):
     html = ""
     for char in range(len(code)):
         html += Markup(charmap_html[code[char]])
     return html
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-def get_info_text(info):
-    info_text = ""
-    info_text += "Checksum: 0x%02X (calculated: 0x%02X)\n" % (info["incl_checksum"], info["calc_checksum"])
-    info_text += "Timestamp: %s\n" % datetime.fromtimestamp(info["timestamp"])
-    info_text += "Revive: %s\n" % (info["type"] == 1)
-    info_text += "Unk1: 0x%X\n" % info["unk1"]
-
-    info_text += "Team Name: "
-    for char in info["team"]:
-        if char == 0:
-            break
-        if char < 402:
-            info_text += romdata.charmap_text[char]
-        else:
-            info_text += "★"
-    info_text += "\n"
-
-    if info["type"] == 0:
-        dungeon = romdata.get_index("dungeons", info["dungeon"])
-        info_text += "Dungeon (%d): %s\n" % (info["dungeon"], dungeon["name"])
-
-        floor = "%dF" % info["floor"]
-        if not dungeon["ascending"]:
-            floor = "B" + floor
-        info_text += "Floor: %s\n" % (floor)
-
-        pokemon = romdata.get_index("pokemon", info["pokemon"])
-        info_text += "Pokemon (%d): %s\n" % (info["pokemon"], pokemon["name"])
-
-        gender = romdata.get_index("genders", info["gender"])
-        info_text += "Gender: %s\n" % gender["name"]
-        reward = romdata.get_index("rewards", info["reward"])
-        info_text += "Reward: %s\n" % reward["name"]
-        info_text += "Unk2: 0x%X\n" % info["unk2"]
-
-    info_text += "Revive value: 0x%08X\n" % info["revive"]
-    return info_text
-
 def get_warnings(info):
     warnings = []
-    if info["calc_checksum"] != info["incl_checksum"]:
-        warnings.append("checksum")
+
+    if "calc_checksum" in info and "incl_checksum" in info:
+        if info["calc_checksum"] != info["incl_checksum"]:
+            warnings.append("checksum")
 
     if info["type"] == 0:
-        items = {
-            "dungeons": "dungeon",
-            "pokemon": "pokemon",
-            "genders": "gender",
-            "rewards": "reward"
-        }
-        for item, index in items.items():
-            if not romdata.get_index(item, info[index])["valid"]:
-                warnings.append(index)
+        for field, array in named_fields.items():
+            if not romdata.get_index(array, info[field])["valid"]:
+                warnings.append(field)
         
         dungeon = romdata.get_index("dungeons", info["dungeon"])
         if info["floor"] == 0 or info["floor"] > dungeon["floors"]:
@@ -105,38 +90,114 @@ def get_warnings(info):
 
     return warnings
 
+def validate_info(info):
+    if "timestamp" not in info or "type" not in info or "team" not in info:
+        return False
+
+    # TODO: Verify team name
+
+    if "unk1" not in info:
+        info["unk1"] = 0
+
+    if info["type"] == 0:
+        fields = ["dungeon", "floor", "pokemon", "gender", "reward"]
+        if "unk2" not in info:
+            info["unk2"] = 0
+    elif info["type"] == 1:
+        fields = ["revive"]
+
+    for field in fields:
+        if field not in info:
+            print(field)
+            return False
+
+    return True
+
+@app.route("/")
+def index():
+    return render_template("index.html",
+            romdata=romdata.romdata,
+            named=named_fields,
+            value=value_fields)
+
 @app.route("/decode", methods=["GET"])
 def decode():
     info = None
     info_text = None
-    password_input = None
     warnings = None
-    decode_failed = False
+    password_input = None
+    password_output = None
 
+    decode_failed = False
     if "c" in request.args:
         password_input = request.args.get("c")
-        code = password_translate(password_input)
+        code = password_char2val(password_input)
+        password_input = escape(password_input)
         if code:
             info = password.decode(code)
-            info_text = get_info_text(info)
+            info_text = escape(password.print_info(info))
             warnings = get_warnings(info)
+            password_input = escape(password_val2char(code))
+            password_output = escape(password_html(code))
         else:
             decode_failed = True
 
-    output_password = None
-    if info and not warnings:
-        output_password = password_html(password.encode({
-            "timestamp": info["timestamp"],
-            "type": 1,
-            "unk1": 0,
-            "team": [romdata.charmap_text.index(x) for x in "Passwd tool"],
-            "revive": info["revive"]
-        }))
-
     return render_template("index.html",
+            romdata=romdata.romdata,
+            named=named_fields,
+            value=value_fields,
             password=password_input,
             info=info,
             info_text=info_text,
             warnings=warnings,
             decode_failed=decode_failed,
-            output_password=output_password)
+            password_output=password_output)
+
+@app.route("/encode", methods=["GET"])
+def encode():
+    warnings = None
+    info_text = None
+    password_input = None
+    password_output = None
+
+    encode_failed = False
+
+    info = {}
+    for field in value_fields:
+        if field not in request.args:
+            continue
+
+        try:
+            value = int(request.args.get(field), 0)
+        except:
+            encode_failed = True
+            continue
+
+        if value < 0 or value > value_fields[field]:
+            encode_failed = True
+            continue
+        info[field] = value
+    if "team" in request.args:
+        info["team"] = request.args.get("team")
+
+    if not encode_failed:
+        if validate_info(info):
+            warnings = get_warnings(info)
+            info["team"] = [romdata.charmap_text.index(x) for x in "Passwd tool"]  # TODO
+            code = password.encode(info)
+            info_text = escape(password.print_info(password.decode(code)))
+            password_input = escape(password_val2char(code))
+            password_output = escape(password_html(code))
+        else:
+            encode_failed=True
+
+    return render_template("index.html",
+            romdata=romdata.romdata,
+            named=named_fields,
+            value=value_fields,
+            info=info,
+            info_text=info_text,
+            warnings=warnings,
+            password=password_input,
+            password_output=password_output,
+            encode_failed=encode_failed)
