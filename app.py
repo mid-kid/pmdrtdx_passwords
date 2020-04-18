@@ -113,12 +113,13 @@ def validate_info(info):
 
     return True
 
-def render_password(code, password_input=None, info=None, **kwargs):
+def render_password(code, revive=False, password_input=None, info=None, **kwargs):
     infores = {}
     inforev = {}
     info_text = None
     warnings = None
     password_output = None
+    password_revive = None
 
     if code:
         info = password.decode(code)
@@ -126,8 +127,25 @@ def render_password(code, password_input=None, info=None, **kwargs):
         warnings = get_warnings(info)
         password_input = escape(password_val2char(code))
         password_output = escape(password_html(code))
+        if info["type"] == 0 and revive:
+            inforev = {
+                "timestamp": int(datetime.now().timestamp()),
+                "unk1": 0,
+                "team": [romdata.charmap_text.index(x) for x in "Passwd tool"],
+                "type": 1,
+                "revive": info["revive"]
+            }
+            password_revive = escape(password_html(password.encode(inforev)))
 
     if info:
+        if "type" in info and info["type"] == 1:
+            inforev = info
+        else:
+            infores = info
+        if "revive" in info:
+            inforev["revive"] = "0x%08X" % info["revive"]
+
+    for info in (infores, inforev):
         if "team" in info:
             team = ""
             for char in info["team"]:
@@ -139,15 +157,6 @@ def render_password(code, password_input=None, info=None, **kwargs):
                     team += "★"
             info["team"] = team
 
-        if "type" in info and info["type"] == 1:
-            inforev = info
-        else:
-            infores = info
-
-        if "revive" in info:
-            inforev["revive"] = "0x%08X" % info["revive"]
-
-    for info in (infores, inforev):
         if "timestamp" not in info:
             info["timestamp"] = int(datetime.now().timestamp())
         if "team" not in info:
@@ -164,6 +173,7 @@ def render_password(code, password_input=None, info=None, **kwargs):
             warnings=warnings,
             password_input=password_input,
             password_output=password_output,
+            password_revive=password_revive,
             **kwargs)
 
 @app.route("/")
@@ -183,7 +193,11 @@ def decode():
         if not code:
             decode_failed = True
 
-    return render_password(code, password_input=password_input, decode_failed=decode_failed)
+    revive = False
+    if "r" in request.args and request.args.get("r") == "1":
+        revive = True
+
+    return render_password(code, revive=revive, password_input=password_input, decode_failed=decode_failed)
 
 @app.route("/encode", methods=["GET"])
 def encode():

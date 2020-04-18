@@ -19,9 +19,6 @@
             E = emerald<br>
             S = star<br>
         </p>
-        <p>
-            To revive yourself, enter your password, press "Decode", and then press "Encode Revival".
-        </p>
 
         <form action="decode">
             <label for="c">Password:</label>
@@ -29,6 +26,7 @@
             <textarea type="text" id="c" name="c" rows="3" cols="70">{% if password_input %}{{ password_input }}{% endif %}</textarea>
             <br>
             <button type="submit">Decode</button>
+            <button type="submit" name="r" value="1">Make revival</button>
         </form>
 
         {% if password_output -%}
@@ -38,25 +36,32 @@
         </div>
 
         {% endif -%}
+        {% if password_revive -%}
+        Revival password:
+        <div class="pwdbox">
+            {{ password_revive }}
+        </div>
+
+        {% endif -%}
         {% if decode_failed -%}
-        <div>
+        <div class="error">
             ERROR! Couldn't decode the password. Make sure it contains exactly 30 character pairs, and doesn't include "XS".
         </div>
 
         {% endif -%}
         {% if encode_failed -%}
-        <div>
+        <div class="error">
             ERROR! Couldn't encode the password. Maybe some fields are missing, or you entered an invalid value for one of them?
         </div>
 
         {% endif -%}
         {% if warnings -%}
-        <div>
+        <div class="error">
             WARNING! This password will not work in-game, because:<br>
             <ul>
             {%- for warning in warnings %}
                 {%- if warning == "checksum" %}
-                <li>The checksum doesn't match</li>
+                <li>The checksum doesn't match. This probably means you haven't typed the password correctly.</li>
                 {%- elif warning == "dungeon" %}
                 <li>The dungeon is invalid or doesn't allow rescues</li>
                 {%- elif warning == "pokemon" %}
