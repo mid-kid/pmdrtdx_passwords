@@ -1,0 +1,1 @@
+dump.py is a tool I used to extract information about dungeons and pokemon directly from the game. It expects a directory called `rom/`, containing `rom/romfs/` and `rom/exefs/main.uncompressed`. These files can be obtained by dumping version 1.0.1 of the game using hactool. It generates a data.json, which is used by the tool.
