@@ -12,11 +12,18 @@
         <form action="decode">
             <label for="c">Password:</label>
             <br>
-            <textarea type="text" id="c" name="c" rows="3" cols="70">{% if password %}{{ password }}{% endif %}</textarea>
+            <textarea type="text" id="c" name="c" rows="3" cols="70">{% if password_input %}{{ password_input }}{% endif %}</textarea>
             <br>
-            <input type="submit" value="Decode">
+            <button type="submit">Decode</button>
         </form>
 
+        {% if password_output -%}
+        Visualized password:
+        <div class="pwdbox">
+            {{ password_output }}
+        </div>
+
+        {% endif -%}
         {% if decode_failed -%}
         <div>
             ERROR! Couldn't decode the password. Make sure it contains exactly 30 character pairs, and doesn't include "XS".
@@ -57,9 +64,7 @@
 
         {% endif -%}
 
-        <form action="encode">
-            <div class="formgrid">
-                {% macro options(name, array, maxval) %}
+                {% macro options(name, array, maxval, info) %}
                 {%- for entry in array %}
                     {%- if info and name in info and info[name] == loop.index0 %}
                     <option value="{{ loop.index0 }}" selected>
@@ -84,66 +89,81 @@
                 {%- endfor %}
                 {% endmacro -%}
 
+        <form action="encode">
+            <div class="formgrid">
                 <label for="timestamp">Timestamp:</label>
                 <input type="text" id="timestamp" name="timestamp" value="
-                    {%- if info and "timestamp" in info %}{{ info.timestamp }}{% else %}0{% endif %}">
-
-                <label for="type">Mail type:</label>
-                <select id="type" name="type">
-                    {{- options("type", ("Rescue mail", "Revival mail"), value.type) -}}
-                </select>
+                    {%- if infores and "timestamp" in infores -%}
+                    {{ infores.timestamp }}{% else %}0{% endif %}">
 
                 <label for="unk1">Unknown 1:</label>
                 <select id="unk1" name="unk1">
-                    {{- options("unk1", (), value.unk1) -}}
+                    {{- options("unk1", (), value.unk1, infores) -}}
                 </select>
 
                 <label for="team">Team Name:</label>
-                <input type="text" id="team" name="team" maxlength="12">
+                <input type="text" id="team" name="team" maxlength="12" value="
+                    {%- if infores and "team" in infores -%}
+                    {{ infores.team }}{% endif %}">
 
                 <label for="dungeon">Dungeon:</label>
                 <select id="dungeon" name="dungeon">
-                    {{- options("dungeon", romdata[named.dungeon], value.dungeon) -}}
+                    {{- options("dungeon", romdata[named.dungeon], value.dungeon, infores) -}}
                 </select>
 
                 <label for="floor">Floor:</label>
                 <input type="number" id="floor" name="floor" value="
-                    {%- if info and "floor" in info %}{{ info.floor }}{% else %}0{% endif %}">
+                    {%- if infores and "floor" in infores -%}
+                    {{ infores.floor }}{% else %}0{% endif %}">
 
                 <label for="pokemon">Pokémon:</label>
                 <select id="pokemon" name="pokemon">
-                    {{- options("pokemon", romdata[named.pokemon], value.pokemon) -}}
+                    {{- options("pokemon", romdata[named.pokemon], value.pokemon, infores) -}}
                 </select>
 
                 <label for="gender">Gender:</label>
                 <select id="gender" name="gender">
-                    {{- options("gender", romdata[named.gender], value.gender) -}}
+                    {{- options("gender", romdata[named.gender], value.gender, infores) -}}
                 </select>
 
                 <label for="reward">Reward:</label>
                 <select id="reward" name="reward">
-                    {{- options("reward", romdata[named.reward], value.reward) -}}
+                    {{- options("reward", romdata[named.reward], value.reward, infores) -}}
                 </select>
 
                 <label for="unk2">Unknown 2:</label>
                 <select id="unk2" name="unk2">
-                    {{- options("unk2", (), value.unk2) -}}
+                    {{- options("unk2", (), value.unk2, infores) -}}
                 </select>
+            </div>
+
+            <button type="submit" name="type" value="0">Encode Rescue</button>
+        </form>
+
+        <form action="encode">
+            <div class="formgrid">
+                <label for="timestamp">Timestamp:</label>
+                <input type="text" id="timestamp" name="timestamp" value="
+                    {%- if inforev and "timestamp" in inforev -%}
+                    {{ inforev.timestamp }}{% else %}0{% endif %}">
+
+                <label for="unk1">Unknown 1:</label>
+                <select id="unk1" name="unk1">
+                    {{- options("unk1", (), value.unk1, inforev) -}}
+                </select>
+
+                <label for="team">Team Name:</label>
+                <input type="text" id="team" name="team" maxlength="12" value="
+                    {%- if inforev and "team" in inforev -%}
+                    {{ inforev.team }}{% endif %}">
 
                 <label for="revive">Revive value:</label>
                 <input type="text" id="revive" name="revive" value="
-                    {%- if info and "revive" in info %}{{ info.revive }}{% else %}0{% endif %}">
+                    {%- if inforev and "revive" in inforev -%}
+                    {{ inforev.revive }}{% endif %}">
             </div>
 
-            <input type="submit" value="Encode">
+            <button type="submit" name="type" value="1">Encode Revival</button>
         </form>
-
-        {%- if password_output %}
-
-        Output password:
-        <div class="pwdbox">
-            {{ password_output }}
-        </div>
-        {%- endif %}
     </body>
 </html>

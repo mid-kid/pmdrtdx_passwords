@@ -186,7 +186,7 @@ def decode(code):
 
     return info
 
-def encode(info):
+def encode(info, keep_checksum=False):
     writer = BitstreamWriter()
     writer.write(info["timestamp"], 32)
     writer.write(info["type"], 1)
@@ -207,7 +207,10 @@ def encode(info):
         writer.write(info["revive"], 30)
 
     code = writer.finish()
-    code = [checksum(code)] + code
+    if keep_checksum:
+        code = [info["incl_checksum"]] + code
+    else:
+        code = [checksum(code)] + code
     code = apply_crypto(code, encrypt=True)
     code = apply_bitpack(code, 8, 6)
     code = apply_shuffle(code, reverse=True)
@@ -218,7 +221,7 @@ def print_info(info):
     info_text = ""
 
     info_text += "Checksum: 0x%02X (calculated: 0x%02X)\n" % (info["incl_checksum"], info["calc_checksum"])
-    info_text += "Timestamp: %s\n" % datetime.fromtimestamp(info["timestamp"])
+    info_text += "Timestamp: %s\n" % datetime.utcfromtimestamp(info["timestamp"])
     info_text += "Revive: %s\n" % (info["type"] == 1)
     info_text += "Unk1: 0x%X\n" % info["unk1"]
 
@@ -286,7 +289,8 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--decode", action="store_true")
     parser.add_argument("-e", "--encode", action="store_true")
     parser.add_argument("-i", "--info", action="store_true")
-    parser.add_argument("-m", "--match-checksum", action="store_true")
+    # parser.add_argument("-m", "--match-checksum", action="store_true")
+    parser.add_argument("-k", "--keep-checksum", action="store_true")
     parser.add_argument("password")
     args = parser.parse_args()
 
@@ -312,9 +316,8 @@ if __name__ == "__main__":
         if not info:
             info = json.loads(args.password)
 
-        if args.match_checksum:
-            # TODO: Doesn't really work
-            pass
+        # TODO: Doesn't really work
+        # if args.match_checksum:
             # incl_checksum = info["incl_checksum"]
             # calc_checksum = decode(encode(info))["calc_checksum"]
 
@@ -326,7 +329,7 @@ if __name__ == "__main__":
 
             # print(decode(encode(info)))
 
-        code = encode(info)
+        code = encode(info, keep_checksum=args.keep_checksum)
         i = 0
         for x in code:
             print(charmap_symbols[x], end="")
@@ -335,6 +338,7 @@ if __name__ == "__main__":
                 print()
             elif i % 5 == 0:
                 print(" ", end="")
+        info = decode(code)
 
     if args.info and info:
         print(print_info(info))
