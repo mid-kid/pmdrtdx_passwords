@@ -21,18 +21,12 @@ class NumberGenerator():
             temp = seed - value
             seed = value
             value = ((temp >> 31) & 0x7FFFFFFF) + temp
-        # for x in self.state:
-            # print("%08X " % x, end="")
-        # print()
 
         for x in range(4):
             for x in range(56):
                 index = (((x + 30) & 0xFF) % 55) + 1
                 temp = self.state[x] - self.state[index]
                 self.state[x] = ((temp >> 31) & 0x7FFFFFFF) + temp
-            # for x in self.state:
-                # print("%08X " % x, end="")
-            # print()
 
     def get(self):
         self.i1 += 1
@@ -289,7 +283,6 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--decode", action="store_true")
     parser.add_argument("-e", "--encode", action="store_true")
     parser.add_argument("-i", "--info", action="store_true")
-    # parser.add_argument("-m", "--match-checksum", action="store_true")
     parser.add_argument("-k", "--keep-checksum", action="store_true")
     parser.add_argument("password")
     args = parser.parse_args()
@@ -315,19 +308,6 @@ if __name__ == "__main__":
     if args.encode:
         if not info:
             info = json.loads(args.password)
-
-        # TODO: Doesn't really work
-        # if args.match_checksum:
-            # incl_checksum = info["incl_checksum"]
-            # calc_checksum = decode(encode(info))["calc_checksum"]
-
-            # print(decode(encode(info)))
-
-            # val = (info["timestamp"] >> 8) & 0xFF
-            # val = (val + (calc_checksum - incl_checksum)) & 0xFF
-            # info["timestamp"] = (info["timestamp"] & 0xffff00ff) | val << 8
-
-            # print(decode(encode(info)))
 
         code = encode(info, keep_checksum=args.keep_checksum)
         i = 0
