@@ -90,7 +90,6 @@ class BitstreamWriter():
             self.bits -= self.bytesize
 
 def apply_shuffle(code, reverse=False):
-    # Shuffle the array around
     shuffle = [3, 27, 13, 21, 12, 9, 7, 4, 6, 17, 19, 16, 28, 29, 23, 20, 11, 0, 1, 22, 24, 14, 8, 2, 15, 25, 10, 5, 18, 26]
     newcode = [None] * len(shuffle)
     for i, x in enumerate(shuffle):
@@ -101,7 +100,6 @@ def apply_shuffle(code, reverse=False):
     return newcode
 
 def apply_bitpack(code, origbits, destbits):
-    # Bitpack the code
     newcode = []
     reader = BitstreamReader(code, origbits)
     while reader.remaining():
@@ -109,7 +107,6 @@ def apply_bitpack(code, origbits, destbits):
     return newcode
 
 def apply_crypto(code, encrypt=False):
-    # Apply the "crypto"
     newcode = [code[0], code[1]]
     gen = NumberGenerator(code[0] | code[1] << 8)
     for x in code[2:]:
@@ -124,7 +121,6 @@ def apply_crypto(code, encrypt=False):
     return newcode
 
 def checksum(code):
-    # Calculate checksum
     calc = code[0]
     for x in range(1, (len(code) - 1) // 2 * 2, 2):
         calc += code[x] | (code[x + 1] << 8)

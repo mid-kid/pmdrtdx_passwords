@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# This is a crappy, partial port of a tool I wrote in 2015 for Super Mystery Dungeon
+# https://gist.github.com/mid-kid/8279635ee8dc57560e96
+# Please don't judge it too harshly
+
 from sys import argv
 from struct import unpack, unpack_from, pack
 from os import makedirs
